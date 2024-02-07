@@ -79,6 +79,8 @@ namespace CategoryMicroservices
             builder.Host.UseSerilog();
 
             builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IMicroServiceManager, MicroServiceManager>();
+            builder.Services.AddScoped<IHttpClientUtil, HttpClientUtil>();
 
             var app = builder.Build();
 

@@ -30,5 +30,12 @@ namespace CategoryMicroservices.Controllers
             var resp = await _catServices.CreateCat(req, conn);
             return resp;
         }
+        [HttpGet("getallproductsbycatid/{categoryId}")]
+        public async Task<CatProdItemFrmAPIResponse> GetProducts(long categoryId)
+        {
+            var resp = await _catServices.GetProdByCatID(categoryId);
+            return resp;
+        }
+
     }
 }

@@ -24,5 +24,17 @@ namespace ProductMicroservices.Controllers
             var resp = await _prodServices.GetAllCategories();
             return resp;
         }
+        [HttpPost("create")]
+        public async Task<ProductInitResponse> Create(ProductRequest req)
+        {
+            var resp = await _prodServices.CreateProd(req, conn);
+            return resp;
+        }
+        [HttpGet("getproductsbycatid/{categoryId}")]
+        public ProductItemResponse GetProducts(long categoryId)
+        {
+            var resp = _prodServices.GetProdByCategoryId(categoryId, conn);
+            return resp;
+        }
     }
 }

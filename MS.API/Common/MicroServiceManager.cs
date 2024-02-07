@@ -12,6 +12,8 @@ namespace MS.API.Common
     {
         Task<AuthTokenResponse> ValidateAuthTokenAsync();
         Task<CategoryAPIItemResponse> GetAllCategories(string token);
+        Task<AuthTokenResponse> ValidateAuthProdTokenAsync();
+        Task<ProdCatAPIItemResponse> GetProdByCatID(string token, long CatId);
 
     }
     public class MicroServiceManager : IMicroServiceManager
@@ -46,14 +48,25 @@ namespace MS.API.Common
             {
                 _logger.LogInformation($"POST- {method} method called with request");
                 string url = $"{BaseUrlForCat}{method}";
-                var utcdate = DateTime.UtcNow;
-                //var x_token = GetXTokenHeader(utcdate, _clientId, _Password);
                 var headers = new List<KeyValuePair<string, string>>();
-                //headers.Add(new KeyValuePair<string, string>("x-token", x_token));
-                //headers.Add(new KeyValuePair<string, string>("UTCTimestamp", utcdate.ToString("yyyy-MM-ddTHH:mm:ss.fff")));
-                //headers.Add(new KeyValuePair<string, string>("Client_ID", _clientId));
-                //headers.Add(new KeyValuePair<string, string>("Content-Type", "application/json"));
-               // headers.Add(new KeyValuePair<string, string>("Ocp-Apim-Subscription-Key", _subkey));
+                response = await _clientUtil.PostJSONAsync<TResponse>(path: url, headers: headers, payload: request);
+                _logger.LogInformation($"response returned from {method}: {Newtonsoft.Json.JsonConvert.SerializeObject(response)}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, method);
+            }
+            return response;
+        }
+
+        internal async Task<TResponse> GetResponseAuthProdTokenAsync<TRequest, TResponse>(TRequest request, string method)
+        {
+            TResponse response = (TResponse)Activator.CreateInstance(typeof(TResponse));
+            try
+            {
+                _logger.LogInformation($"POST- {method} method called with request");
+                string url = $"{BaseUrlForProd}{method}";
+                var headers = new List<KeyValuePair<string, string>>();
                 response = await _clientUtil.PostJSONAsync<TResponse>(path: url, headers: headers, payload: request);
                 _logger.LogInformation($"response returned from {method}: {Newtonsoft.Json.JsonConvert.SerializeObject(response)}");
             }
@@ -70,15 +83,32 @@ namespace MS.API.Common
             TResponse response = default;
             try
             {
-                //Log(_queryParams, method);
                 _logger.LogInformation($"GET-{method} method called");
                 string url = $"{BaseUrlForCat}{method}";
                 string _token = accesstoken ;
                 var headers = new List<KeyValuePair<string, string>>();
                 headers.Add(new KeyValuePair<string, string>("Authorization", _token));
-                //headers.Add(new KeyValuePair<string, string>("UTCTimestamp", utcdate.ToString("yyyy-MM-ddTHH:mm:ss.fff")));
-                //headers.Add(new KeyValuePair<string, string>("Client_ID", _clientId));
-                //headers.Add(new KeyValuePair<string, string>("Ocp-Apim-Subscription-Key", _subkey));
+                response = await _clientUtil.GetJSON<TResponse>(path: url, headers: headers, queryParams: _queryParams);
+                _logger.LogInformation($"response returned from {method}: {Newtonsoft.Json.JsonConvert.SerializeObject(response)}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, method);
+            }
+            return response;
+        }
+
+        internal async Task<TResponse> DoGetProdAsync<TResponse>(List<KeyValuePair<string, object>> _queryParams, string accesstoken, string method)
+        {
+            //TResponse response = (TResponse)Activator.CreateInstance(typeof(TResponse));
+            TResponse response = default;
+            try
+            {
+                _logger.LogInformation($"GET-{method} method called");
+                string url = $"{BaseUrlForProd}{method}";
+                string _token = accesstoken;
+                var headers = new List<KeyValuePair<string, string>>();
+                headers.Add(new KeyValuePair<string, string>("Authorization", _token));
                 response = await _clientUtil.GetJSON<TResponse>(path: url, headers: headers, queryParams: _queryParams);
                 _logger.LogInformation($"response returned from {method}: {Newtonsoft.Json.JsonConvert.SerializeObject(response)}");
             }
@@ -94,10 +124,21 @@ namespace MS.API.Common
             return await GetResponseAuthTokenAsync<AuthRequest, AuthTokenResponse>(request, "api/authcategory/login");
         }
 
+        public async Task<AuthTokenResponse> ValidateAuthProdTokenAsync()
+        {
+            AuthRequest request = new AuthRequest { userName = _userName, password = _Password };
+            return await GetResponseAuthProdTokenAsync<AuthRequest, AuthTokenResponse>(request, "api/authproduct/login");
+        }
         public async Task<CategoryAPIItemResponse> GetAllCategories(string token)
         {
             var _queryParams = new List<KeyValuePair<string, object>>();
             return await DoGetCategoriesAsync<CategoryAPIItemResponse>(_queryParams, token,  $"api/categoryRequests");
+        }
+        public async Task<ProdCatAPIItemResponse> GetProdByCatID(string token, long CatId)
+        {
+            var _queryParams = new List<KeyValuePair<string, object>>();
+            //_queryParams.Add(new KeyValuePair<string, object>("categoryId", CatId));
+            return await DoGetProdAsync<ProdCatAPIItemResponse>(_queryParams, token, $"api/productRequests/getproductsbycatid/{CatId}");
         }
     }
 }

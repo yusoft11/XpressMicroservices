@@ -25,4 +25,13 @@ namespace MS.API.Common
     {
         public List<CategoryAPIItem> data { get; set; }
     }
+    public class ProdCatAPIItem
+    {
+        public long categoryId { get; set; }
+        public string productName { get; set; }
+    }
+    public class ProdCatAPIItemResponse : GenericResponseApi
+    {
+        public List<ProdCatAPIItem> data { get; set; }
+    }
 }
